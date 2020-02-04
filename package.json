@@ -1,0 +1,28 @@
+{
+  "name": "cql-translation-service-client",
+  "version": "1.0.0",
+  "description": "A client for the cql-translation-service",
+  "repository": "https://github.com/mcode/cql-translation-service-client",
+  "license": "Apache 2.0",
+  "files": ["lib/*"],
+  "main": "lib/client.js",
+  "types": "lib/client.d.ts",
+  "devDependencies": {
+    "prettier": "1.19.1",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "1.18.0",
+    "typescript": "^3.1.1",
+    "jest": ""
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tslint --config tslint.json --project .",
+    "format": "prettier --write \"src/*.ts\" \"src/*.js",
+    "test": "yarn jest",
+    "prepare": "yarn  build",
+    "prepublishOnly": "yarn test && yarn lint",
+    "preversion": "yarn lint",
+    "version": "yarn format && git add -A src",
+    "postversion": "git push && git push --tags"
+  }
+}
