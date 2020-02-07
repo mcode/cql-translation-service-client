@@ -28,10 +28,10 @@ export interface ElmObject {
 
 export class Client {
 
-  url: string;
+  protected url: string;
 
-  constructor(){
-    this.url = '';
+  constructor(serviceUrl: string){
+    this.url = serviceUrl;
   }
 
   /**
