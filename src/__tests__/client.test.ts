@@ -1,6 +1,5 @@
 import {Client} from '../client'; 
 const globalAny:any = global;
-require('dotenv').config();
 const client = new Client('');
 const testCQL = "library mCODEResources version '1'";
 const testELM = {
