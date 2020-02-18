@@ -22,7 +22,7 @@ const testCqlObject = {
 };
 
 const testResponse = `--Boundary_1
-Content-Type: application/elm+json
+content-type: application/elm+json
 Content-Disposition: form-data; name="main"
 
 {
@@ -38,7 +38,7 @@ Content-Disposition: form-data; name="main"
    }
 }
 --Boundary_1
-Content-Type: application/elm+json
+content-type: application/elm+json
 Content-Disposition: form-data; name="ex1"
 
 {
@@ -73,13 +73,13 @@ describe("cql-to-elm", () => {
   it("converts complex cql to elm", done => {
     (axios.post as jest.Mock).mockImplementation(() =>
       Promise.resolve({
-        headers: {
-          get: (s: string): string => testHeader
-        },
-        text: () => Promise.resolve(testResponse)
+        headers: {"content-type": testHeader},
+        data: testResponse
       })
     );
     client.convertCQL(testCqlObject).then(elms => {
+      console.log(elms);
+      
       expect(elms).toHaveProperty("main");
       expect(elms).toHaveProperty("main.library");
       expect(elms).toHaveProperty("main.library.identifier");
