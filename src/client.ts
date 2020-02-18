@@ -1,4 +1,5 @@
 import axios from "axios";
+import * as FormData from 'form-data';
 
 // sample header= "multipart/form-data;boundary=Boundary_1"
 // get the part after "boundary=" and before any subsequent ;
@@ -46,15 +47,15 @@ export class Client {
    */
   public async convertCQL(cql: CqlObject): Promise<ElmObject> {
     // Connect to web service
-    const formdata: any = {};
+    const formdata = new FormData();
     Object.keys(cql.libraries).forEach((key, i) => {
-      formdata[`${key}`] = cql.libraries[key];
+      formdata.append(`${key}`,cql.libraries[key]);
     });
 
-    if (cql.main) formdata["main"] = cql.main;
-
+    if (cql.main) formdata.append("main", cql.main);
+    //let hed = {'Content-Type':'application/x-www-form-urlencoded'}
     return axios
-      .post(this.url, formdata, { headers: this.headers })
+      .post(this.url, formdata, {headers:  formdata.getHeaders()})
       .then(elm => this.handleElm(elm))
       .catch(error => {
         if (error.response?.status === 400 && error.response?.data.library)
@@ -80,7 +81,7 @@ export class Client {
   }
 
   private handleElm(elm: any): ElmObject {
-    const header = elm.headers.get("content-type");
+    const header = elm.headers["content-type"];
     let boundary = "";
     if (header) {
       // sample header= "multipart/form-data;boundary=Boundary_1"
@@ -88,8 +89,9 @@ export class Client {
       boundary = result ? `--${result[1]}` : "";
     }
     const obj: ElmObject = { main: {}, libraries: {} };
-    return elm.text().then((text: string) => {
-      const elms = text.split(boundary).reduce((oldArray, line, i) => {
+
+    let data = elm.data.toString();
+      const elms = data.split(boundary).reduce((oldArray:any, line:any, i:any) => {
         const body = extractJSONContent.exec(line);
         if (body) {
           const elmName = extractMultipartFileName.exec(line);
@@ -102,6 +104,5 @@ export class Client {
         return oldArray;
       }, obj);
       return elms;
-    });
   }
 }
