@@ -1,12 +1,15 @@
-import {Client} from '../client'; 
-const globalAny:any = global;
-const client = new Client('');
+import axios from "axios";
+import { Client } from "../client";
+
+jest.mock("axios");
+
+const client = new Client("");
 const testCQL = "library mCODEResources version '1'";
 const testELM = {
   library: {
     identifier: {
-      id: 'mCODEResources',
-      version: '1'
+      id: "mCODEResources",
+      version: "1"
     }
   }
 };
@@ -19,7 +22,7 @@ const testCqlObject = {
 };
 
 const testResponse = `--Boundary_1
-Content-Type: application/elm+json
+content-type: application/elm+json
 Content-Disposition: form-data; name="main"
 
 {
@@ -35,7 +38,7 @@ Content-Disposition: form-data; name="main"
    }
 }
 --Boundary_1
-Content-Type: application/elm+json
+content-type: application/elm+json
 Content-Disposition: form-data; name="ex1"
 
 {
@@ -52,39 +55,47 @@ Content-Disposition: form-data; name="ex1"
 }
 --Boundary_1--`;
 
-const testHeader = 'multipart/form-data;boundary=Boundary_1';
-describe('cql-to-elm', () => {
-  it('converts basic cql to elm', done => {
-    globalAny.fetch = jest.fn(() => Promise.resolve({ json: () => testELM }));
+const testHeader = "multipart/form-data;boundary=Boundary_1";
+describe("cql-to-elm", () => {
+  it("converts basic cql to elm", done => {
+    (axios.post as jest.Mock).mockImplementation(() =>
+      Promise.resolve({ data: testELM })
+    );
     client.convertBasicCQL(testCQL).then(elm => {
-      expect(elm).toHaveProperty('library');
-      expect(elm).toHaveProperty('library.identifier');
-      expect(elm).toHaveProperty('library.identifier.id', 'mCODEResources');
-      expect(elm).toHaveProperty('library.identifier.version', '1');
+      expect(elm).toHaveProperty("library");
+      expect(elm).toHaveProperty("library.identifier");
+      expect(elm).toHaveProperty("library.identifier.id", "mCODEResources");
+      expect(elm).toHaveProperty("library.identifier.version", "1");
       done();
     });
   });
 
-  it('converts complex cql to elm', done => {
-    globalAny.fetch = jest.fn(() =>
+  it("converts complex cql to elm", done => {
+    (axios.post as jest.Mock).mockImplementation(() =>
       Promise.resolve({
-        headers: {
-          get: (s: string): string => testHeader
-        },
-        text: () => Promise.resolve(testResponse)
+        headers: {"content-type": testHeader},
+        data: testResponse
       })
     );
-   client.convertCQL(testCqlObject).then(elms => {
-      expect(elms).toHaveProperty('main');
-      expect(elms).toHaveProperty('main.library');
-      expect(elms).toHaveProperty('main.library.identifier');
-      expect(elms).toHaveProperty('main.library.identifier.id', 'mCODEResources');
+    client.convertCQL(testCqlObject).then(elms => {
+      console.log(elms);
+      
+      expect(elms).toHaveProperty("main");
+      expect(elms).toHaveProperty("main.library");
+      expect(elms).toHaveProperty("main.library.identifier");
+      expect(elms).toHaveProperty(
+        "main.library.identifier.id",
+        "mCODEResources"
+      );
 
-      expect(elms).toHaveProperty('libraries');
-      expect(elms).toHaveProperty('libraries.ex1');
-      expect(elms).toHaveProperty('libraries.ex1.library');
-      expect(elms).toHaveProperty('libraries.ex1.library.identifier');
-      expect(elms).toHaveProperty('libraries.ex1.library.identifier.id', 'example');
+      expect(elms).toHaveProperty("libraries");
+      expect(elms).toHaveProperty("libraries.ex1");
+      expect(elms).toHaveProperty("libraries.ex1.library");
+      expect(elms).toHaveProperty("libraries.ex1.library.identifier");
+      expect(elms).toHaveProperty(
+        "libraries.ex1.library.identifier.id",
+        "example"
+      );
       done();
     });
   });
