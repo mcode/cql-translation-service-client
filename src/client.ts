@@ -3,7 +3,7 @@ import * as FormData from 'form-data';
 
 // sample header= "multipart/form-data;boundary=Boundary_1"
 // get the part after "boundary=" and before any subsequent ;
-const extractMultipartBoundary = /.*;boundary=(Boundary.*);?.*/g;
+const extractMultipartBoundary = /.*;boundary=(Boundary.*);?.*/;
 
 const extractMultipartFileName = /Content-Disposition: form-data; name="([^"]+)"/;
 
@@ -12,20 +12,102 @@ const extractJSONContent = /(\{[^]*\})/;
 
 const extractCQLInclude = /include .* called (.*)/g;
 
-export interface CqlObject {
-  main: string;
-  libraries: Library;
-}
-
-export interface Library {
-  [name: string]: string; // should probably have an object for expected ELM structure.
-}
-
-export interface ElmObject {
-  main: object;
-  libraries: {
-    [key: string]: object;
+export interface CqlLibraries {
+  [name: string]: {
+    cql?: string;
+    version?: string;
   };
+}
+
+export interface ElmLibraries {
+  [key: string]: ElmLibrary;
+}
+
+export interface ElmLibrary {
+  library: {
+    identifier: {
+      id: string;
+      version: string;
+    };
+    schemaIdentifier: {
+      id: string;
+      version: string;
+    };
+    usings?: {
+      def: ElmUsing[];
+    };
+    includes?: {
+      def: ElmIncludes[];
+    };
+    valueSets?: {
+      def: ElmValueSet[];
+    };
+    codes?: {
+      def: ElmCode[];
+    };
+    codeSystems?: {
+      def: ElmCodeSystem[];
+    };
+    concepts?: {
+      def: object[];
+    };
+    statements: {
+      def: ElmStatement[];
+    };
+    [x: string]: object | undefined;
+  };
+}
+
+export interface ElmUsing {
+  uri: string;
+  localIdentifier: string;
+  localId?: string;
+  locator?: string;
+  version?: string;
+}
+
+export interface ElmIncludes {
+  path: string;
+  version: string;
+  localId?: string;
+  locator?: string;
+  localIdentifier?: string;
+}
+
+export interface ElmValueSet {
+  id: string;
+  name: string;
+  localId?: string;
+  locator?: string;
+  accessLevel: string;
+  resultTypeSpecifier: object;
+}
+
+export interface ElmCode {
+  id: string;
+  name: string;
+  display: string;
+  codeSystem: {
+    name: string;
+  };
+  accessLevel: string;
+}
+
+export interface ElmCodeSystem {
+  id: string;
+  name: string;
+  accessLevel: string;
+}
+
+export interface ElmStatement {
+  name: string;
+  context: string;
+  expression: object;
+  locator?: string;
+  locatorId?: string;
+  accessLevel?: string;
+  resultTypeName?: string;
+  annotation?: object[];
 }
 
 export class Client {
@@ -42,18 +124,19 @@ export class Client {
 
   /**
    * Function that requests web_service to convert the cql into elm.
-   * @param cql - cql file that is the input to the function.
-   * @return The resulting elm translation of the cql file.
+   * @param cqlLibraries - object containing CqlLibraries that is the input to the function.
+   * @return The resulting elm translation of the cql libraries.
    */
-  public async convertCQL(cql: CqlObject): Promise<ElmObject> {
+  public async convertCQL(cqlLibraries: CqlLibraries): Promise<ElmLibraries> {
     // Connect to web service
     const formdata = new FormData();
-    Object.keys(cql.libraries).forEach((key, i) => {
-      formdata.append(`${key}`,cql.libraries[key]);
+    Object.keys(cqlLibraries).forEach((key) => {
+      const cqlLibrary = cqlLibraries[key];
+      if (cqlLibrary.cql) {
+        formdata.append(`${key}`, cqlLibrary.cql);
+      }
     });
 
-    if (cql.main) formdata.append("main", cql.main);
-    //let hed = {'Content-Type':'application/x-www-form-urlencoded'}
     return axios
       .post(this.url, formdata, {headers:  formdata.getHeaders()})
       .then(elm => this.handleElm(elm))
@@ -64,7 +147,7 @@ export class Client {
       });
   }
 
-  public async convertBasicCQL(cql: string): Promise<object> {
+  public async convertBasicCQL(cql: string): Promise<ElmLibrary> {
     // Connect to web service
     return axios
       .post(this.url, cql, {
@@ -80,29 +163,23 @@ export class Client {
       });
   }
 
-  private handleElm(elm: any): ElmObject {
-    const header = elm.headers["content-type"];
-    let boundary = "";
+  private handleElm(elm: any): ElmLibrary {
+    const header = elm.headers['content-type'];
+    let boundary = '';
     if (header) {
       // sample header= "multipart/form-data;boundary=Boundary_1"
       const result = extractMultipartBoundary.exec(header);
-      boundary = result ? `--${result[1]}` : "";
+      boundary = result ? `--${result[1]}` : '';
     }
-    const obj: ElmObject = { main: {}, libraries: {} };
 
-    let data = elm.data.toString();
-      const elms = data.split(boundary).reduce((oldArray:any, line:any, i:any) => {
-        const body = extractJSONContent.exec(line);
-        if (body) {
-          const elmName = extractMultipartFileName.exec(line);
-          if (elmName && elmName[1] === "main") {
-            oldArray[elmName[1]] = JSON.parse(body[1]);
-          } else if (elmName) {
-            oldArray.libraries[elmName[1]] = JSON.parse(body[1]);
-          }
-        }
-        return oldArray;
-      }, obj);
-      return elms;
+    const elmLibraries: ElmLibraries = {};
+    return elm.data.split(boundary).reduce((oldArray: any, line: any) => {
+      const body = extractJSONContent.exec(line);
+      if (body) {
+        const elmName = extractMultipartFileName.exec(line);
+        if (elmName) oldArray[elmName[1]] = JSON.parse(body[1]);
+      }
+      return oldArray;
+    }, elmLibraries);
   }
 }

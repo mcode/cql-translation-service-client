@@ -14,16 +14,14 @@ const testELM = {
   }
 };
 
-const testCqlObject = {
-  main: "library mCODEResources version '1'",
-  libraries: {
-    ex1: "library example version '2'"
-  }
+const testCqlLibraries = {
+  ex1: { cql: "library mCODEResources version '1'" },
+  ex2: { cql: "library example version '2'" }
 };
 
 const testResponse = `--Boundary_1
 content-type: application/elm+json
-Content-Disposition: form-data; name="main"
+Content-Disposition: form-data; name="ex1"
 
 {
    "library" : {
@@ -39,7 +37,7 @@ Content-Disposition: form-data; name="main"
 }
 --Boundary_1
 content-type: application/elm+json
-Content-Disposition: form-data; name="ex1"
+Content-Disposition: form-data; name="ex2"
 
 {
    "library" : {
@@ -77,23 +75,23 @@ describe("cql-to-elm", () => {
         data: testResponse
       })
     );
-    client.convertCQL(testCqlObject).then(elms => {
+    client.convertCQL(testCqlLibraries).then(elms => {
       console.log(elms);
       
-      expect(elms).toHaveProperty("main");
-      expect(elms).toHaveProperty("main.library");
-      expect(elms).toHaveProperty("main.library.identifier");
+      expect(elms).toHaveProperty("ex1");
+      expect(elms).toHaveProperty("ex1.library");
+      expect(elms).toHaveProperty("ex1.library.identifier");
       expect(elms).toHaveProperty(
-        "main.library.identifier.id",
+        "ex1.library.identifier.id",
         "mCODEResources"
       );
 
-      expect(elms).toHaveProperty("libraries");
-      expect(elms).toHaveProperty("libraries.ex1");
-      expect(elms).toHaveProperty("libraries.ex1.library");
-      expect(elms).toHaveProperty("libraries.ex1.library.identifier");
+      expect(elms).toHaveProperty("ex2");
+      expect(elms).toHaveProperty("ex2");
+      expect(elms).toHaveProperty("ex2.library");
+      expect(elms).toHaveProperty("ex2.library.identifier");
       expect(elms).toHaveProperty(
-        "libraries.ex1.library.identifier.id",
+        "ex2.library.identifier.id",
         "example"
       );
       done();
