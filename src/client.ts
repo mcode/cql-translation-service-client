@@ -84,3 +84,5 @@ export class Client {
     }, elmLibraries);
   }
 }
+
+export * from './types';
