@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as FormData from 'form-data';
-import { CqlLibraries, ElmLibraries, ElmLibrary } from 'types';
+import { CqlLibraries, ElmLibraries, ElmLibrary} from "./types";
 
 // sample header= "multipart/form-data;boundary=Boundary_1"
 // get the part after "boundary=" and before any subsequent ;
