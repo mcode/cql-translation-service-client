@@ -14,7 +14,7 @@ const extractCQLInclude = /include .* called (.*)/g;
 
 export interface CqlLibraries {
   [name: string]: {
-    cql?: string;
+    cql: string;
     version?: string;
   };
 }
