@@ -137,8 +137,12 @@ export class Client {
       }
     });
 
+    // Use formdata.getHeaders() in node environment, formdata.getHeaders does not work in browser
+    let headers;
+    if (formdata.getHeaders) headers = formdata.getHeaders();
+
     return axios
-      .post(this.url, formdata, {headers:  formdata.getHeaders()})
+      .post(this.url, formdata, { headers })
       .then(elm => this.handleElm(elm))
       .catch(error => {
         if (error.response?.status === 400 && error.response?.data.library)
