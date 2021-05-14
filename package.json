@@ -1,9 +1,9 @@
 {
   "name": "cql-translation-service-client",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A client for the cql-translation-service",
   "repository": "https://github.com/mcode/cql-translation-service-client",
-  "license": "Apache 2.0",
+  "license": "Apache-2.0",
   "files": [
     "lib/*"
   ],
@@ -31,7 +31,7 @@
     "postversion": "git push && git push --tags"
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "form-data": "3.0.0"
   }
 }
